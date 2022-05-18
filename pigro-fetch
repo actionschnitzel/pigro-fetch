@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+
+import os
+import os.path
+from turtle import left, width
+from os import popen
+from os import system as cmd
+import platform
+import psutil
+from collections import namedtuple
+from datetime import datetime
+import distro
+import socket
+from gpiozero import CPUTemperature
+from pathlib import Path
+from cgitb import enable
+import subprocess
+from subprocess import check_call, CalledProcessError
+import threading
+from threading import Thread
+from concurrent.futures import thread
+
+
+def get_size(bytes, suffix="B"):
+    """
+    Scale bytes to its proper format
+    e.g:
+        1253656 => '1.20MB'
+        1253656678 => '1.17GB'
+    """
+    factor = 1024
+    for unit in ["", "K", "M", "G", "T", "P"]:
+        if bytes < factor:
+            return f"{bytes:.2f}{unit}{suffix}"
+        bytes /= factor
+
+
+def extract_ip():
+    st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        st.connect(("10.255.255.255", 1))
+        IP = st.getsockname()[0]
+    except Exception:
+        IP = "127.0.0.1"
+    finally:
+        st.close()
+    return IP
+
+
+hdd = psutil.disk_usage('/')
+
+
+def get_total_space():
+    return hdd.total / (2**30)
+
+
+def get_used_space():
+    return hdd.used / (2**30)
+
+
+def get_free_space():
+    return hdd.free / (2**30)
+
+
+def get_disk_percent():
+    return hdd.percent
+
+
+total = str(round(get_total_space(), 2))
+used = str(round(get_used_space(), 2))
+free = str(round(get_free_space(), 2))
+disk = str(get_disk_percent())
+
+distro = distro.id()
+user = os.environ.get("LOGNAME")
+pid = os.getpid()
+ps = psutil.Process(pid)
+my_system = platform.uname()
+cpufreq = psutil.cpu_freq()
+svmem = psutil.virtual_memory()
+swap = psutil.swap_memory()
+hostname = socket.gethostname()
+IPAddr = extract_ip()
+cpu = CPUTemperature()
+Pi_Model = open("/proc/device-tree/model", "r")
+get_de = os.environ.get('DESKTOP_SESSION')
+
+
+print("""\
+  ____  _  ____           _____    _       _     
+ |  _ \(_)/ ___|_ __ ___ |  ___|__| |_ ___| |__  
+ | |_) | | |  _| '__/ _ \| |_ / _ \ __/ __| '_ \ 
+ |  __/| | |_| | | | (_) |  _|  __/ || (__| | | |
+ |_|   |_|\____|_|  \___/|_|  \___|\__\___|_| |_|                                                 
+""")
+print('\033[95m' + 'System:' + '\033[00m' f' {my_system.system}')
+print('\033[95m' + 'Distro:' + '\033[00m' f' {distro}')
+print('\033[95m' + 'DE:' + '\033[00m' f' {get_de}')
+print('\033[95m' + 'Device Name:' + '\033[00m' f' {my_system.node}')
+print('\033[95m' + 'Board:' + '\033[00m' f' {Pi_Model.read()}')
+print('\033[95m' + 'Kernel:' + '\033[00m' f' {my_system.release}')
+print('\033[95m' + 'Architecture:' + '\033[00m' f' {my_system.machine}')
+print('\033[95m' + 'Current CPU Freq:' +
+      '\033[00m' f' {cpufreq.current:.2f}Mhz')
+print('\033[95m' + 'CPU Max Freq:' +
+      '\033[00m' f' {cpufreq.max:.2f}Mhz')
+
+print('\033[95m' + 'CPU Min Freq:' +
+      '\033[00m' f' {cpufreq.min:.2f}Mhz')
+
+print('\033[95m' + 'RAM Total:' +
+      '\033[00m' f' {get_size(svmem.total)}')
+
+print('\033[95m' + 'SWAP Total:' +
+      '\033[00m' f' {get_size(swap.total)}')
+
+print('\033[95m' + 'IP Address:' +
+      '\033[00m' f' {IPAddr}')
+
+print('\033[95m' + 'Disk Size:' +
+      '\033[00m' f' {total}')
+
+print('\033[95m' + 'Disk Use:' +
+      '\033[00m' f' {used}')
+
+print('\033[95m' + 'Free Space:' +
+      '\033[00m' f' {free}')
