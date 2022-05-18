@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+from distutils.command.clean import clean
 import os
 import os.path
+import time
 from turtle import left, width
 from os import popen
 from os import system as cmd
@@ -19,6 +21,9 @@ from subprocess import check_call, CalledProcessError
 import threading
 from threading import Thread
 from concurrent.futures import thread
+
+
+def clear(): os.system('clear')  # on Linux System
 
 
 def get_size(bytes, suffix="B"):
@@ -66,6 +71,12 @@ def get_disk_percent():
     return hdd.percent
 
 
+def lines_that_contain(string, fp):
+    return [line for line in fp if string in line]
+
+
+config_path = "/boot/config.txt"
+
 total = str(round(get_total_space(), 2))
 used = str(round(get_used_space(), 2))
 free = str(round(get_free_space(), 2))
@@ -87,36 +98,73 @@ get_de = os.environ.get('DESKTOP_SESSION')
 
 
 print("""\
-  ____  _  ____           _____    _       _     
- |  _ \(_)/ ___|_ __ ___ |  ___|__| |_ ___| |__  
- | |_) | | |  _| '__/ _ \| |_ / _ \ __/ __| '_ \ 
- |  __/| | |_| | | | (_) |  _|  __/ || (__| | | |
- |_|   |_|\____|_|  \___/|_|  \___|\__\___|_| |_|                                                 
+____  _  ____           _____    _       _     
+|  _ \(_)/ ___|_ __ ___ |  ___|__| |_ ___| |__  
+| |_) | | |  _| '__/ _ \| |_ / _ \ __/ __| '_ \ 
+|  __/| | |_| | | | (_) |  _|  __/ || (__| | | |
+|_|   |_|\____|_|  \___/|_|  \___|\__\___|_| |_|                                                 
 """)
+print('\033[95m' + 'Board:' + '\033[00m' f' {Pi_Model.read()}')
+print("------------------------------------------")
 print('\033[95m' + 'System:' + '\033[00m' f' {my_system.system}')
 print('\033[95m' + 'Distro:' + '\033[00m' f' {distro}')
 print('\033[95m' + 'DE:' + '\033[00m' f' {get_de}')
 print('\033[95m' + 'Device Name:' + '\033[00m' f' {my_system.node}')
-print('\033[95m' + 'Board:' + '\033[00m' f' {Pi_Model.read()}')
 print('\033[95m' + 'Kernel:' + '\033[00m' f' {my_system.release}')
 print('\033[95m' + 'Architecture:' + '\033[00m' f' {my_system.machine}')
-print('\033[95m' + 'Current CPU Freq:' +
-      '\033[00m' f' {cpufreq.current:.2f}Mhz')
+print("------------------------------------------")
 print('\033[95m' + 'CPU Max Freq:' +
       '\033[00m' f' {cpufreq.max:.2f}Mhz')
 
 print('\033[95m' + 'CPU Min Freq:' +
       '\033[00m' f' {cpufreq.min:.2f}Mhz')
+print("------------------------------------------")
 
+with open(f"{config_path}") as fp:
+    for line in lines_that_contain("arm_freq", fp):
+        # print(line)
+        print('\033[95m' + 'arm_freq=' +
+              '\033[00m' + line[9:-1] + " MHz")
+
+
+with open(f"{config_path}") as fp:
+    for line in lines_that_contain("gpu_freq", fp):
+        # print(line)
+        print('\033[95m' + 'gpu_freq=' +
+              '\033[00m' + line[9:-1] + " MHz")
+
+
+with open(f"{config_path}") as fp:
+    for line in lines_that_contain("gpu_mem", fp):
+        # print(line)
+        print('\033[95m' + 'gpu_mem=' +
+              '\033[00m' + line[8:-1] + " MHz")
+
+
+with open(f"{config_path}") as fp:
+    for line in lines_that_contain("force_turbo", fp):
+        # print(line)
+        print('\033[95m' + 'force_turbo=' +
+              '\033[00m' + line[12:-1])
+
+
+with open(f"{config_path}") as fp:
+    for line in lines_that_contain("over_voltage", fp):
+        # print(line)
+        print('\033[95m' + 'over_voltage=' +
+              '\033[00m' + line[13:-1])
+
+
+print("------------------------------------------")
 print('\033[95m' + 'RAM Total:' +
       '\033[00m' f' {get_size(svmem.total)}')
 
 print('\033[95m' + 'SWAP Total:' +
       '\033[00m' f' {get_size(swap.total)}')
-
+print("------------------------------------------")
 print('\033[95m' + 'IP Address:' +
       '\033[00m' f' {IPAddr}')
-
+print("------------------------------------------")
 print('\033[95m' + 'Disk Size:' +
       '\033[00m' f' {total}')
 
